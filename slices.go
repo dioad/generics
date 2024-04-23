@@ -2,6 +2,7 @@ package generics
 
 import (
 	"errors"
+	"fmt"
 )
 
 var (
@@ -13,24 +14,46 @@ var (
 // # It returns an array of errors, where each error corresponds to the result of the function applied to the element at the same index
 //
 // It returns nil if all function calls return nil
-func Apply[A any](f func(A) error, arr []A) []error {
-	errors := make([]error, len(arr))
+func Apply[A any](f func(A) error, arr []A) error {
+	err := NewMapError[A]()
 
-	errFound := false
-
-	for i, a := range arr {
-		err := f(a)
-		if err != nil {
-			errFound = true
-			errors[i] = err
+	for _, a := range arr {
+		e := f(a)
+		if e != nil {
+			err.Add(a, e)
 		}
 	}
 
-	if errFound {
-		return errors
+	if err.HasError() {
+		return err
 	}
 
 	return nil
+}
+
+type MapError[T any] struct {
+	Errors []Pair[T, error]
+}
+
+func (m *MapError[T]) Error() string {
+	return fmt.Sprintf("%d errors", len(m.Errors))
+}
+
+func (m *MapError[T]) HasError() bool {
+	return len(m.Errors) > 0
+}
+
+func (m *MapError[T]) Add(a T, err error) {
+	m.Errors = append(m.Errors, Pair[T, error]{
+		A: a,
+		B: err,
+	})
+}
+
+func NewMapError[T any]() *MapError[T] {
+	return &MapError[T]{
+		Errors: make([]Pair[T, error], 0),
+	}
 }
 
 // Map applies a function to each element of an array
@@ -39,23 +62,21 @@ func Apply[A any](f func(A) error, arr []A) []error {
 // corresponds to the result of the function applied to the element at the same index
 //
 // It returns nil if all function calls return nil
-func Map[A any, B any](f func(A) (B, error), arr []A) ([]B, []error) {
+func Map[A any, B any](f func(A) (B, error), arr []A) ([]B, error) {
 	results := make([]B, len(arr))
 
-	errors := make([]error, len(arr))
+	err := NewMapError[A]()
 
-	errFound := false
 	for i, a := range arr {
 		b, e := f(a)
 		if e != nil {
-			errFound = true
-			errors[i] = e
+			err.Add(a, e)
 		}
 		results[i] = b
 	}
 
-	if errFound {
-		return results, errors
+	if err.HasError() {
+		return results, err
 	}
 
 	return results, nil

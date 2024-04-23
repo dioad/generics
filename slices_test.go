@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"testing"
-
-	"github.com/dioad/filter"
 )
 
 var (
@@ -15,19 +13,21 @@ var (
 func TestApplyWithErrors(t *testing.T) {
 	t.Run("Test Apply", func(t *testing.T) {
 		arr := []int{1, 2, 3, 4, 5}
-		errs := Apply(func(a int) error {
+		err := Apply(func(a int) error {
 			if a%2 == 0 {
 				return nil
 			}
 			return TestErrNotEven
 		}, arr)
 
-		compactedErrs := filter.FilterSlice(errs, func(a error) bool {
-			return a != nil
-		})
+		if err == nil {
+			t.Errorf("Expected error, got nil")
+		}
 
-		if len(compactedErrs) != 3 {
-			t.Errorf("Expected 3 errors, got %d", len(errs))
+		errCount := len(err.(*MapError[int]).Errors)
+
+		if errCount != 3 {
+			t.Errorf("Expected 3 errors, got %d", errCount)
 		}
 	})
 }
@@ -106,18 +106,18 @@ func ExampleMap() {
 
 func ExampleApply() {
 	arr := []int{1, 2, 3, 4, 5}
-	errs := Apply(func(a int) error {
+	err := Apply(func(a int) error {
 		if a%2 == 0 {
 			return nil
 		}
 		return errors.New("testErr")
 	}, arr)
 
-	if errs != nil {
-		fmt.Println(errs)
+	if err != nil {
+		fmt.Println(err)
 	}
 
-	// Output: [testErr <nil> testErr <nil> testErr]
+	// Output: 3 errors
 }
 
 func ExampleZip() {
