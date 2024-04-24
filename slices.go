@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrDifferentLength = errors.New("arrays must be the same length")
+	ErrDifferentLength = errors.New("arrays must be of equal length")
 )
 
 // Apply applies a function to each element of an array
@@ -31,18 +31,24 @@ func Apply[A any](f func(A) error, arr []A) error {
 	return nil
 }
 
+// MapError is a collection of errors
+//
+// It is used to collect errors from a function applied to each element of an array
 type MapError[T any] struct {
 	Errors []Pair[T, error]
 }
 
+// Error returns a string representation of the MapError
 func (m *MapError[T]) Error() string {
 	return fmt.Sprintf("%d errors", len(m.Errors))
 }
 
+// HasError returns true if the MapError has errors
 func (m *MapError[T]) HasError() bool {
 	return len(m.Errors) > 0
 }
 
+// Add adds an error to the MapError
 func (m *MapError[T]) Add(a T, err error) {
 	m.Errors = append(m.Errors, Pair[T, error]{
 		A: a,
@@ -50,6 +56,7 @@ func (m *MapError[T]) Add(a T, err error) {
 	})
 }
 
+// NewMapError creates a new MapError
 func NewMapError[T any]() *MapError[T] {
 	return &MapError[T]{
 		Errors: make([]Pair[T, error], 0),
@@ -82,9 +89,25 @@ func Map[A any, B any](f func(A) (B, error), arr []A) ([]B, error) {
 	return results, nil
 }
 
+// Pair is a tuple of two values
 type Pair[A, B any] struct {
 	A A
 	B B
+}
+
+// Compact removes zero values from an array
+func Compact[A comparable](arr []A) []A {
+	var zero A
+
+	result := make([]A, 0)
+
+	for _, a := range arr {
+		if a != zero {
+			result = append(result, a)
+		}
+	}
+
+	return result
 }
 
 func Zip[A any, B any](a []A, b []B) ([]Pair[A, B], error) {
