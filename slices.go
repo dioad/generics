@@ -63,6 +63,20 @@ func NewMapError[T any]() *MapError[T] {
 	}
 }
 
+// SafeMap applies a function to each element of an array
+//
+// It returns an array of results
+func SafeMap[A any, B any](f func(A) B, arr []A) []B {
+	results := make([]B, len(arr))
+
+	for i, a := range arr {
+		results[i] = f(a)
+	}
+
+	return results
+
+}
+
 // Map applies a function to each element of an array
 //
 // It returns an array of results and an array of errors, where each result and error
@@ -126,4 +140,16 @@ func Zip[A any, B any](a []A, b []B) ([]Pair[A, B], error) {
 	}
 
 	return result, nil
+}
+
+// SelectOne returns the first element in an array that satisfies a predicate
+func SelectOne[T any](arr []T, f func(T) bool) (T, error) {
+	var zero T
+	for _, v := range arr {
+		if f(v) {
+			return v, nil
+		}
+	}
+
+	return zero, errors.New("not found")
 }
