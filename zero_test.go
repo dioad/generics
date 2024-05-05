@@ -1,6 +1,9 @@
 package generics
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestIsZeroValue(t *testing.T) {
 	t.Run("int", func(t *testing.T) {
@@ -51,4 +54,44 @@ func TestIsZeroValue(t *testing.T) {
 			t.Errorf("Expected false, got true")
 		}
 	})
+}
+
+func ExampleIsZeroValue_int() {
+	var a int
+	fmt.Println(IsZeroValue(a))
+
+	a = 4
+	fmt.Println(IsZeroValue(a))
+	// Output:
+	// true
+	// false
+}
+
+func ExampleIsZeroValue_struct() {
+	type testStruct struct {
+		A int
+		B string
+	}
+
+	var b testStruct
+	fmt.Println(IsZeroValue(b))
+
+	b.A = 12
+	b.B = "34"
+	fmt.Println(IsZeroValue(b))
+
+	// Output:
+	// true
+	// false
+}
+
+func ExampleIsZeroValue_string() {
+	var a string
+	fmt.Println(IsZeroValue(a))
+
+	a = "asdf"
+	fmt.Println(IsZeroValue(a))
+	// Output:
+	// true
+	// false
 }
