@@ -122,6 +122,7 @@ func Compact[A comparable](arr []A) []A {
 	return result
 }
 
+// Zip combines two arrays into an array of pairs
 func Zip[A any, B any](a []A, b []B) ([]Pair[A, B], error) {
 	if len(a) != len(b) {
 		return nil, ErrDifferentLength
