@@ -24,7 +24,7 @@ func TestApplyWithErrors(t *testing.T) {
 			t.Errorf("Expected error, got nil")
 		}
 
-		errCount := len(err.(*MapError[int]).Errors)
+		errCount := len(err.(*MapError).Errors)
 
 		if errCount != 3 {
 			t.Errorf("Expected 3 errors, got %d", errCount)
@@ -62,6 +62,52 @@ func TestMap(t *testing.T) {
 		if err != nil {
 			t.Errorf("Expected nil, got %v", err)
 		}
+
+		for i, v := range doubled {
+			if v != arr[i]*2 {
+				t.Errorf("Expected %d, got %d", arr[i]*2, v)
+			}
+		}
+	})
+}
+
+func TestMapWithError(t *testing.T) {
+	t.Run("Test Map with Error", func(t *testing.T) {
+		arr := []int{1, 2, 3, 4, 5}
+		doubled, err := Map(func(a int) (int, error) {
+			if a%2 == 0 {
+				return a * 2, nil
+			}
+			return 0, TestErrNotEven
+		}, arr)
+
+		if err == nil {
+			t.Errorf("Expected error, got nil")
+		}
+
+		mapError := err.(*MapError)
+		errCount := len(mapError.Errors)
+
+		if errCount != 3 {
+			t.Errorf("Expected 3 errors, got %d", errCount)
+		}
+
+		for i, v := range doubled {
+			if _, exists := mapError.Errors[i]; !exists {
+				if v != arr[i]*2 {
+					t.Errorf("Expected %d, got %d", arr[i]*2, v)
+				}
+			}
+		}
+	})
+}
+
+func TestSafeMap(t *testing.T) {
+	t.Run("Test SafeMap", func(t *testing.T) {
+		arr := []int{1, 2, 3, 4, 5}
+		doubled := SafeMap(func(a int) int {
+			return a * 2
+		}, arr)
 
 		for i, v := range doubled {
 			if v != arr[i]*2 {
@@ -198,6 +244,34 @@ func TestCompactWithErrors(t *testing.T) {
 	compactTestHelper[error](t, tests)
 }
 
+func TestSelectOne(t *testing.T) {
+	t.Run("found", func(t *testing.T) {
+		arr := []int{1, 2, 3, 4, 5}
+		selected, err := SelectOne(arr, func(a int) bool {
+			return a%2 == 0
+		})
+
+		if err != nil {
+			t.Errorf("Expected nil, got %v", err)
+		}
+
+		if selected != 2 {
+			t.Errorf("Expected 2, got %d", selected)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		arr := []int{1, 2, 3, 4, 5}
+		_, err := SelectOne(arr, func(a int) bool {
+			return a%6 == 0
+		})
+
+		if !errors.Is(err, ErrNotFound) {
+			t.Errorf("Expected ErrNotFound, got %v", err)
+		}
+	})
+}
+
 func ExampleMap() {
 	arr := []int{1, 2, 3, 4, 5}
 	doubled, err := Map(func(a int) (int, error) {
@@ -248,4 +322,19 @@ func ExampleCompact() {
 
 	fmt.Println(compacted)
 	// Output: [1 2 3 4 5]
+}
+
+func ExampleSelectOne() {
+	arr := []int{1, 2, 3, 4, 5}
+	selected, err := SelectOne(arr, func(a int) bool {
+		return a%2 == 0
+	})
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	fmt.Println(selected)
+	// Output:
+	// 2
 }

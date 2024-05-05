@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrDifferentLength = errors.New("arrays must be of equal length")
+	ErrNotFound        = errors.New("not found")
 )
 
 // Apply applies a function to each element of an array
@@ -15,12 +16,12 @@ var (
 //
 // It returns nil if all function calls return nil
 func Apply[A any](f func(A) error, arr []A) error {
-	err := NewMapError[A]()
+	err := NewMapError()
 
-	for _, a := range arr {
+	for i, a := range arr {
 		e := f(a)
 		if e != nil {
-			err.Add(a, e)
+			err.Add(i, e)
 		}
 	}
 
@@ -34,32 +35,29 @@ func Apply[A any](f func(A) error, arr []A) error {
 // MapError is a collection of errors
 //
 // It is used to collect errors from a function applied to each element of an array
-type MapError[T any] struct {
-	Errors []Pair[T, error]
+type MapError struct {
+	Errors map[int]error
 }
 
 // Error returns a string representation of the MapError
-func (m *MapError[T]) Error() string {
+func (m *MapError) Error() string {
 	return fmt.Sprintf("%d errors", len(m.Errors))
 }
 
 // HasError returns true if the MapError has errors
-func (m *MapError[T]) HasError() bool {
+func (m *MapError) HasError() bool {
 	return len(m.Errors) > 0
 }
 
 // Add adds an error to the MapError
-func (m *MapError[T]) Add(a T, err error) {
-	m.Errors = append(m.Errors, Pair[T, error]{
-		A: a,
-		B: err,
-	})
+func (m *MapError) Add(idx int, err error) {
+	m.Errors[idx] = err
 }
 
 // NewMapError creates a new MapError
-func NewMapError[T any]() *MapError[T] {
-	return &MapError[T]{
-		Errors: make([]Pair[T, error], 0),
+func NewMapError() *MapError {
+	return &MapError{
+		Errors: make(map[int]error),
 	}
 }
 
@@ -86,12 +84,12 @@ func SafeMap[A any, B any](f func(A) B, arr []A) []B {
 func Map[A any, B any](f func(A) (B, error), arr []A) ([]B, error) {
 	results := make([]B, len(arr))
 
-	err := NewMapError[A]()
+	err := NewMapError()
 
 	for i, a := range arr {
 		b, e := f(a)
 		if e != nil {
-			err.Add(a, e)
+			err.Add(i, e)
 		}
 		results[i] = b
 	}
@@ -151,5 +149,5 @@ func SelectOne[T any](arr []T, f func(T) bool) (T, error) {
 		}
 	}
 
-	return zero, errors.New("not found")
+	return zero, ErrNotFound
 }
