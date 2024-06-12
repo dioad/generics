@@ -10,6 +10,12 @@ var (
 	ErrNotFound        = errors.New("not found")
 )
 
+func SafeApply[A any](f func(A), arr []A) {
+	for _, a := range arr {
+		f(a)
+	}
+}
+
 // Apply applies a function to each element of an array
 //
 // # It returns an array of errors, where each error corresponds to the result of the function applied to the element at the same index

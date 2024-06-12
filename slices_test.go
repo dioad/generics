@@ -52,6 +52,21 @@ func TestApply(t *testing.T) {
 	})
 }
 
+func TestSafeApply(t *testing.T) {
+	t.Run("Test Apply", func(t *testing.T) {
+		expectedSum := 15
+		runningSum := 0
+		arr := []int{1, 2, 3, 4, 5}
+		SafeApply(func(a int) {
+			runningSum += a
+		}, arr)
+
+		if runningSum != expectedSum {
+			t.Errorf("Expected %d, got %d", expectedSum, runningSum)
+		}
+	})
+}
+
 func TestMap(t *testing.T) {
 	t.Run("Test Map", func(t *testing.T) {
 		arr := []int{1, 2, 3, 4, 5}
