@@ -100,7 +100,8 @@ func TestMapWithError(t *testing.T) {
 			t.Errorf("Expected error, got nil")
 		}
 
-		mapError := err.(*MapError)
+		var mapError *MapError
+		errors.As(err, &mapError)
 		errCount := len(mapError.Errors)
 
 		if errCount != 3 {
