@@ -1,3 +1,8 @@
+// Package generics provides generic utility functions for working with Go types.
+//
+// This package implements common functional programming patterns like Map, Filter,
+// and Reduce using Go's generics support. It aims to provide a simple, consistent
+// API for working with collections in Go.
 package generics
 
 import (
@@ -6,10 +11,16 @@ import (
 )
 
 var (
+	// ErrDifferentLength is returned when two slices of different lengths are provided
+	// to a function that requires equal lengths.
 	ErrDifferentLength = errors.New("arrays must be of equal length")
-	ErrNotFound        = errors.New("not found")
+
+	// ErrNotFound is returned when an element matching a predicate is not found.
+	ErrNotFound = errors.New("not found")
 )
 
+// SafeApply applies a function to each element of a slice without returning any errors.
+// This is useful for side effects like logging or metrics collection.
 func SafeApply[A any](f func(A), arr []A) {
 	for _, a := range arr {
 		f(a)
