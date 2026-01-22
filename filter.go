@@ -3,6 +3,7 @@ package generics
 import "slices"
 
 // Filter returns a new slice containing only the elements that satisfy the predicate.
+// If the input slice is empty or nil, it returns the input slice.
 func Filter[A any](arr []A, predicate func(A) bool) []A {
 	if len(arr) == 0 {
 		return arr
@@ -20,6 +21,7 @@ func Filter[A any](arr []A, predicate func(A) bool) []A {
 }
 
 // Reduce applies a function to each element in a slice, accumulating a single result.
+// It starts with the initial value and sequentially applies f to the accumulator and each element.
 func Reduce[A any, B any](arr []A, initial B, f func(B, A) B) B {
 	result := initial
 
@@ -37,7 +39,7 @@ func Contains[T any](arr []T, f func(T) bool) bool {
 
 // ForEach applies a function to each element of a slice and returns the first error encountered.
 //
-// Unlike Apply, ForEach stops at the first error.
+// Unlike Apply, ForEach stops processing as soon as an error is encountered.
 func ForEach[A any](arr []A, f func(A) error) error {
 	for _, a := range arr {
 		if err := f(a); err != nil {
