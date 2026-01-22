@@ -1,0 +1,102 @@
+name: Release Build
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  metadata:
+    name: Build Metadata
+    runs-on: ubuntu-20.04
+    outputs:
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=version::${GITHUB_REF/refs\/tags\//}
+
+  test:
+    name: Vet and Test
+    runs-on: ubuntu-20.04
+
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.16
+      id: go
+
+    - name: Get dependencies
+      run: |
+        go mod download
+
+    - name: Vet
+      run: |
+        go vet ./...
+
+    - name: Test Race Conditions
+      run: go test -cover -race -v ./...
+
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    needs:
+      - metadata
+      - test
+
+    strategy:
+      matrix:
+        os: [darwin, linux]
+        arch: [amd64]
+        include:
+        - os: linux
+          arch: arm64
+
+    env:
+      GOOS: ${{ matrix.os }}
+      GOARCH: ${{ matrix.arch }}
+
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.16
+      id: go
+
+    - name: Get dependencies
+      run: |
+        go mod download
+
+    - name: Go Build
+      run: |
+        go build ./...
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-20.04
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: true
+
+
