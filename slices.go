@@ -138,7 +138,7 @@ func Zip[A any, B any](a []A, b []B) ([]Pair[A, B], error) {
 
 	result := make([]Pair[A, B], len(a))
 
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		pair := Pair[A, B]{
 			A: a[i],
 			B: b[i],

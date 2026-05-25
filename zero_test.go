@@ -122,12 +122,12 @@ func TestIsZeroValueComplex(t *testing.T) {
 	})
 
 	t.Run("interface", func(t *testing.T) {
-		var zeroInterface interface{}
+		var zeroInterface any
 		if !IsZeroValue(zeroInterface) {
 			t.Errorf("Expected true, got false")
 		}
 
-		nonZeroInterface := interface{}(42)
+		nonZeroInterface := any(42)
 		if IsZeroValue(nonZeroInterface) {
 			t.Errorf("Expected false, got true")
 		}
